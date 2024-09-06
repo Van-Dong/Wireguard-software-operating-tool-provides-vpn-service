@@ -1,0 +1,210 @@
+{% extends 'base/master.html' %}
+
+{% block title %}Backup and Recover{% endblock %}
+
+{% block content %}
+<div class="row mx-1" style="overflow: auto; max-height: 800px;">
+    <div class="ps-3 pt-2 d-flex">
+        <h2>List Backup Time</h2>
+        <div class="btn-group-import-export ms-auto">
+            <button type="button" class="btn btn-primary ms-3 btn-import"
+                        data-bs-toggle="modal" data-bs-target="#modal_import_data">Import</button>
+            <a href="/export/all/" class="btn btn-success ms-3 btn-export">Export</a>
+        </div>
+    </div>
+
+    {% for time in times %}
+    <!-- Main content -->
+    <div class="my-2 backup-{{time.ms}}">
+        <div class="card shadow-sm">
+            <!-- Card header -->
+            <div class="card-body bg-white">
+                <div class="datetime-backup" role="group">
+                    <span class="fs-5 me-1">Datetime Backup All Database:</span>
+                    <i class="fs-6">{{time.datetime}}</i>
+                    <button type="button" class="btn btn-outline-primary ms-3 btn-recover" data-time="{{time.ms}}"
+                        data-bs-toggle="modal" data-bs-target="#modal_confirm_recover_config">Recover</button>
+                    <a href="/recover/{{time.ms}}" type="button" class="btn btn-outline-success ms-3 btn-export-backup">Export</a>
+                    <button type="button" class="btn btn-outline-danger ms-3 btn-delete-backup" data-time="{{time.ms}}"
+                        data-bs-toggle="modal" data-bs-target="#modal_confirm_delete_backup">Delete</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block modal %}
+<!-- Modal confirm recover config -->
+<div class="modal fade" id="modal_confirm_recover_config">
+    <div class="modal-dialog">
+        <div class="modal-content text-bg-danger">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Recover Config</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>Do you want to recover configuration?</p>
+                <p>This may affect wireguard servers.</p>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                    id="btn-confirm-recover">Recover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirm recover config -->
+<div class="modal fade" id="modal_confirm_delete_backup">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Delete this backup configuration</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>Do you want to remove this backup configuration?</p>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                    id="btn-confirm-delete-backup">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+
+        // Start recover
+        btn_confirm_recover = $("#btn-confirm-recover")
+        btn_recover = $(".btn-recover").click(function () {
+            btn_confirm_recover.val($(this).attr('data-time'))
+        })
+        btn_confirm_recover.click(function() {
+            time_recover = $(this).val()
+            fetch(`/recover/${time_recover}/`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End recover
+
+        // Start delete backup file
+        btn_confirm_delete_backup = $("#btn-confirm-delete-backup")
+        $(".btn-delete-backup").click(function() {
+            btn_confirm_delete_backup.val($(this).attr('data-time'))
+        })
+        btn_confirm_delete_backup.click(function() {
+            time_recover = $(this).val()
+            fetch(`/recover/${time_recover}/`, {
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                            $(`div.backup-${time_recover}`).remove()
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End delete backup file
+
+        // Start import data
+        $('#form_import_data').submit(function (e) {
+            const MAX_SIZE_FILE = 3*1024*1024;  // 3MB
+            e.preventDefault()
+            var formData = new FormData();
+            var fileField = document.getElementById('file_import');
+
+            var file = fileField.files[0];
+
+            if (!file) {
+                createToast('danger', "You must upload file!")
+                return false;
+            } 
+
+            if (file.type != 'application/json') {
+                createToast('danger', `Type of file must be .json!`)
+                return false;
+            }
+
+            if (file.size > MAX_SIZE_FILE) {
+                createToast('danger', `File ${file.name} is too big. Limit size is 3MB.`)
+                return false;
+            }
+
+            formData.append('file', file);
+
+            fetch('/import/all/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End import data
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base/master.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+                <!-- Form Content (sub of content) -->
+                <div class="row mx-1">
+                    <!-- Header content -->
+                    <h2 class="ps-3 pt-2">Profile Settings</h2>
+
+                    <!-- User Profile Settings -->
+                    <div class="col-md-6 col-lg-5 col-xl-4">
+                        <div class="card card-success">
+                            <!-- Card header -->
+                            <div class="card-header text-bg-success">
+                                <h4 class="card-title mt-1">Update user information</h4>
+                            </div>
+
+                            <!-- Card body and footer -->
+                            <form role="form" id="form_update_profile" name="form_update_profile"
+                                novalidate="novalidate">
+                                <div class="card-body">
+                                    <input type="text" class="form-control" name="id" id="id" value="{{request.user.id}}" hidden>
+                                    <div class="form-group">
+                                        <label for="username" class="control-label">Username</label>
+                                        <input type="text" class="form-control" name="username" id="username" value="{{request.user.username}}" disabled>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="password" class="control-label">Password</label>
+                                        <input type="password" class="form-control" name="password" id="password"
+                                            value="" placeholder="Set new password in here">
+                                    </div>
+
+                                    <div class="mb-3 text-danger" id="error"> </div>
+
+                                    <!-- /.card-body -->
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn btn-success" id="update">Update</button>
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+{% endblock %}
+
+
+{% block script %}
+  <script>
+    $(document).ready(function(){
+
+        // Fetch /profile/ POST
+        $("#form_update_profile").submit(function(event){
+            event.preventDefault();
+
+            fetch("/profile/", {
+                method: "POST", 
+                headers: {
+                    'Content-Type': 'application/json' // Định dạng dữ liệu là JSON
+                },
+                body: JSON.stringify({  // Chuyển đổi dữ liệu thành chuỗi JSON
+                    id: $("#id").val(),
+                    password: $("#password").val()
+                }) 
+            })
+            .then(response => {
+                if (response.ok) { // Mã trạng thái 200
+                    response.json().then(res => {
+                        // Success 
+                        // console.log('Success:', res['message']);
+                        createToast('info', res['message'])
+                        $("#password").val("")
+                    }) 
+                } else if (response.status === 400) {  // Mã trạng thái 400
+                    return response.json().then(err => {   // err là object chứa body của response --> errorData['message']
+                        // Failed 
+                        createToast('danger', err['message'])
+                        $("#password").val("")
+                    });
+                } else {
+                    throw new Error('Unexpected error: ' + response.status);
+                }
+            })
+            .catch(error => createToast('danger', error))
+
+
+        })
+    });
+  </script>
+{% endblock %}

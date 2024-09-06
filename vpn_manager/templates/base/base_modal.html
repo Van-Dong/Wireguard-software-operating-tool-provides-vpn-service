@@ -1,0 +1,383 @@
+    <!-- Modal add new client -->
+    <div class="modal fade" id="modal_new_client">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">New Wireguard Client</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Modal body and footer -->
+                <form method="post" name="form_new_client" id="form_new_client" novalidate="novalidate">
+                    <!-- Modal body -->
+                    <div class="modal-body">
+
+                        <!-- Name -->
+                        <div class="form-group">
+                            <label for="client_name" class="control-label">Name</label>
+                            <input type="text" class="form-control" id="client_name" name="client_name">
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label for="client_email" class="control-label">Email</label>
+                            <input type="text" class="form-control" id="client_email" name="client_email">
+                        </div>
+                      
+                        <!-- Select interface -->
+                        <div class="form-group">
+                            <label for="name_interface" class="control-label">WireGuard Interface</label>
+                            <select id="name_interface" class="form-control" data-placeholder="Select an IP address"> 
+                            </select>
+                        </div>
+                      
+
+                        <!-- IP Allocation -->
+                        <div class="form-group">
+                            <label for="client_allocated_ips" class="control-label">IP Allocation</label>
+                            <div class="form-control">
+                                <ul id="client_allocated_ips_tagsinput" class="tagsinput">
+                                    <li class="tag">
+                                        <span class="tag-value">10.252.1.1/32</span>
+                                        <span class="remove-tag bi bi-x-circle-fill"></span>
+                                    </li>
+                                    <input type="text" data-role="tagsinput" class="form-control"
+                                        id="client_allocated_ips">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Allowed IPs -->
+                        <div class="form-group">
+                            <label for="client_allowed_ips" class="control-label">Allowed IPs
+                                <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                    title="Specify a list of addresses that will get routed to the
+                                     server. These addresses will be included in 'AllowedIPs' of client config">
+                                </i>
+                            </label>
+                            <div class="form-control">
+                                <ul id="client_allowed_ips_tagsinput" class="tagsinput">
+                                    <li class="tag">
+                                        <span class="tag-value">0.0.0.0/0</span>
+                                        <span class="remove-tag bi bi-x-circle-fill"></span>
+                                    </li>
+                                    <input type="text" data-role="tagsinput" class="form-control"
+                                        id="client_allowed_ips">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Extra Allowed IPs -->
+                        <div class="form-group">
+                            <label for="client_extra_allowed_ips" class="control-label">Extra Allowed IPs
+                                <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                    title="Specify a list of addresses that will get routed to the
+                                 client. These addresses will be included in 'AllowedIPs' of WG server config">
+                                </i>
+                            </label>
+                            <div class="form-control">
+                                <ul id="client_extra_allowed_ips_tagsinput" class="tagsinput">
+                                    <li class="tag">
+                                        <span class="tag-value">0.0.0.0/0</span>
+                                        <span class="remove-tag bi bi-x-circle-fill"></span>
+                                    </li>
+                                    <input type="text" data-role="tagsinput" class="form-control"
+                                        id="client_extra_allowed_ips">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Endpoint -->
+                        <div class="form-group">
+                            <label for="client_endpoint" class="control-label">Endpoint
+                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                            title="Specifies the Public IP and port for the VPN Gateway you are connecting to.">
+                            </i>
+                            </label>
+                            <input type="text" class="form-control" id="client_endpoint" name="client_endpoint">
+                        </div>
+
+                        <!-- Use server DNS checkbox -->
+                        <div class="form-group">
+                            <div class="icheck-primary d-inline">
+                                <input type="checkbox" id="use_server_dns">
+                                <label for="use_server_dns" class="control-label">
+                                    Use server DNS
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Enable after creation checkbox -->
+                        <div class="form-group">
+                            <div class="icheck-primary d-inline">
+                                <input type="checkbox" id="enabled">
+                                <label for="enabled" class="control-label">
+                                    Enable after creation
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Public and Preshared Keys -->
+                        <details>
+                            <summary><strong>Public and Preshared Keys</strong>
+                                <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                    title="If you don't want to let the server generate and store the
+                                 client's private key, you can manually specify its public and preshared key here.">
+                                </i>
+                            </summary>
+                            <!-- Public Key -->
+                            <div class="form-group" style="margin-top: 1rem">
+                                <label for="client_public_key" class="control-label">
+                                    Public Key
+                                </label>
+                                <input type="text" class="form-control" id="client_public_key" name="client_public_key"
+                                    placeholder="Autogenerated">
+                            </div>
+                            <!-- Preshared Key -->
+                            <div class="form-group">
+                                <label for="client_preshared_key" class="control-label">
+                                    Preshared Key
+                                </label>
+                                <input type="text" class="form-control" id="client_preshared_key"
+                                    name="client_preshared_key"
+                                    placeholder="Autogenerated - enter &quot;-&quot; to skip generation">
+                            </div>
+                        </details>
+
+                        <!-- Additional configuration -->
+                        <details class="mt-2">
+                            <summary><strong>Additional configuration</strong>
+                            </summary>
+                            {% comment %} <div class="form-group mt-3">
+                                <label for="client_telegram_userid" class="control-label">Telegram
+                                    userid</label>
+                                <input type="text" class="form-control" id="client_telegram_userid"
+                                    name="client_telegram_userid">
+                            </div> {% endcomment %}
+                            <div class="form-group">
+                                <label for="additional_notes" class="control-label">Notes</label>
+                                <textarea class="form-control" style="min-height: 6rem;" id="additional_notes"
+                                    name="additional_notes" placeholder="Additional notes about this client"></textarea>
+                            </div>
+                        </details>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal add new interface -->
+    <div class="modal fade" id="modal_new_interface">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Add new interface</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form method="post" name="form_new_interface" id="form_new_interface" novalidate="novalidate">
+                    <div class="modal-body">
+
+                    <!-- Name interface -->
+                        <div class="form-group">
+                            <label for="wg_interface_name" class="control-label">Name Interface</label>
+                            <input type="text" class="form-control" id="wg_interface_name" name="wg_interface_name" placeholder="Name interface" value="">
+                        </div>
+
+                            <!-- Server Interface Addresses - Tags Input -->
+                        <div class="form-group">
+                            <label for="interface_addresses" class="control-label">Interface Addresses</label>
+                            <div class="form-control"> 
+                                <ul id="interface_addresses_tagsinput" class="tagsinput">
+                                    <input type="text" data-role="tagsinput" class="form-control" id="interface_addresses">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Listen Port -->
+                        <div class="form-group">
+                            <label for="listen_port" class="control-label">Listening Port</label>
+                            <input type="text" class="form-control" id="listen_port" name="listen_port"
+                                placeholder="Listen Port" value="">
+                        </div>
+
+                        <!-- Pre Up -->
+                        <div class="form-group">
+                            <label for="pre_up" class="control-label">Pre Up Script</label>
+                            <input type="text" class="form-control" id="pre_up" name="pre_up" placeholder="Pre Up Script"
+                                value="">
+                        </div>
+
+                        <!-- Post up -->
+                        <div class="form-group">
+                            <label for="post_up" class="control-label">Post Up Script</label>
+                            <input type="text" class="form-control" id="post_up" name="post_up" placeholder="Post Up Script"
+                                value="">
+                        </div>
+
+                        <!-- Pre Down -->
+                        <div class="form-group">
+                            <label for="pre_down" class="control-label">Pre Down Script</label>
+                            <input type="text" class="form-control" id="pre_down" name="pre_down"
+                                placeholder="Pre Down Script" value="">
+                        </div>
+
+                        <!-- Post Down -->
+                        <div class="form-group">
+                            <label for="post_down" class="control-label"> Post Down Script</label>
+                            <input type="text" class="form-control" id="post_down" name="post_down"
+                                placeholder="Post Down Script" value="">
+                        </div>
+
+
+                        <!-- Enable after creation checkbox -->
+                        <div class="form-group">
+                            <div class="icheck-primary d-inline">
+                                <input type="checkbox" id="interface_enabled">
+                                <label for="interface_enabled" class="control-label">
+                                    Enable after creation
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Public and Private Keys -->
+                        <details>
+                            <summary><strong>Public and Private Keys</strong>
+                                <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                    title="If you leave both blank, the server will generate the key for you. 
+                                    Note: if you use your own key, you must give a pair of keys, not just one key">
+                                </i>
+                            </summary>
+                            <!-- Public Key -->
+                            <div class="form-group" style="margin-top: 1rem">
+                                <label for="interface_public_key" class="control-label">
+                                    Public Key
+                                </label>
+                                <input type="text" class="form-control" id="interface_public_key" name="interface_public_key"
+                                    placeholder="Leaving blank will autogenerate">
+                            </div>
+                            <!-- Private Key -->
+                            <div class="form-group">
+                                <label for="interface_private_key" class="control-label">
+                                    Private Key
+                                </label>
+                                <input type="text" class="form-control" id="interface_private_key"
+                                    name="interface_private_key"
+                                    placeholder="Leaving blank will autogenerate ">
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Modal apply config -->
+    <div class="modal fade" id="modal_apply_config">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Apply Config</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Do you want to write config file and restart WireGuard server?</p>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="apply_config_confirm">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal stop wireguard -->
+    <div class="modal fade" id="modal_stop_wireguard">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Stop Wireguard</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Do you want to stop WireGuard server?</p>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="stop_wireguard_confirm">Stop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal backup current config -->
+    <div class="modal fade" id="modal_backup_current_config">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Backup Current Config</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>Do you want to backup current config?</p>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal" id="backup_config_confirm">Backup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal import file database -->
+<div class="modal fade" id="modal_import_data">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Add data to database from file</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form name="form_import_data" id="form_import_data" enctype="multipart/form-data" novalidate="novalidate">
+                <div class="modal-body">
+                    <p class="text-danger">Note: This action will overriade current data.</p>
+                    <div class="form-group">
+                        <label for="file_import" class="control-label pe-2">Import File: </label>
+                        <input type="file" name="file_import" id="file_import">
+                    </div>
+
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal"
+                        id="btn_upload_file_import">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

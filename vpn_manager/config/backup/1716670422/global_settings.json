@@ -1,0 +1,12 @@
+{
+    "endpoint_address": "118.70.33.77",
+    "dns_servers": [
+        "1.1.1.1"
+    ],
+    "mtu": 0,
+    "persistent_keepalive": 15,
+    "table": "auto",
+    "name_interface": "wg0",
+    "firewall_mark": "0xca6c",
+    "updated_at": "2024-05-20T22:33:29.216149"
+}

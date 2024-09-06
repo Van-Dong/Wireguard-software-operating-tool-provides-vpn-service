@@ -1,0 +1,180 @@
+{% extends 'base/master.html' %}
+
+{% block title %}Monitor{% endblock %}
+
+{% block content %}
+<div class="row mx-1" style="overflow: auto; max-height: 800px;">
+    <div class="ps-3 pt-2 shadow">
+        <h2>Wireguard Interface online</h2> 
+        <table class="table">
+            <thead>
+              <tr>
+                <!-- Ca online la 7 -->
+                {% comment %} <th scope="col">Online</th> {% endcomment %}
+                <th scope="col">Interface</th>
+                <th scope="col">Listening port</th>
+                <th scope="col">Number of Peers</th>
+                <th scope="col">Public key</th>
+              </tr>
+            </thead>
+            <tbody id="body_interface_table">
+                
+            </tbody>
+          </table>
+    </div>
+
+
+    <!-- Main content -->
+    <div class="my-4 shadow">
+        <div class="wireguard-clients-status">
+            <h2>Wireguard Client Connected</h2> 
+        </div>
+        <div>
+            <table class="table"> 
+                <thead>
+                  <tr>
+                    <!-- Ca online la 7 -->
+                    {% comment %} <th scope="col">Online</th> {% endcomment %}
+                    <th scope="col">Interface</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Endpoint</th>
+                    <th scope="col">Allowed IP Address</th>
+                    <th scope="col">Received Bytes</th>
+                    <th scope="col">Transmitted Bytes</th>
+                    <th scope="col">Last Handshake</th>
+                  </tr>
+                </thead>
+                <tbody id="body_client_table">
+                    
+                </tbody>
+              </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block modal %}
+{% endblock %}
+
+{% block script %}
+{% load static %}
+<script src="{% static 'django_eventstream/eventsource.min.js' %}"></script>
+<script src="{% static 'django_eventstream/reconnecting-eventsource.js' %}"></script>
+<script src="{% static 'chart/Chart.js' %}"></script> 
+
+<script>
+
+    function convertBytes(numBytes) {
+        if (numBytes < 1024) {
+            return `${numBytes} Bytes`;
+        } else if (numBytes < 1024 ** 2) {
+            return `${(numBytes / 1024).toFixed(2)} KB`;
+        } else if (numBytes < 1024 ** 3) {
+            return `${(numBytes / 1024 ** 2).toFixed(2)} MB`;
+        } else if (numBytes < 1024 ** 4) {
+            return `${(numBytes / 1024 ** 3).toFixed(2)} GB`;
+        } else if (numBytes < 1024 ** 5) {
+            return `${(numBytes / 1024 ** 4).toFixed(2)} TB`;
+        } else {
+            return `${(numBytes / 1024 ** 5).toFixed(2)} PB`;
+        }
+    }
+
+    function convertDate(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+        const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        return formattedDate
+    }
+
+    function create_row_client(interface_name, data_client){
+        if (data_client['latest_handshake'] == "0") {
+            latest_handshake_client = "Never Connected"
+        } else {
+            latest_handshake_client = Number(data_client['latest_handshake']); //  seconds type number
+            latest_handshake_client = convertDate(new Date(latest_handshake_client * 1000))
+        }
+        tr = `<tr>
+            <td>${interface_name}</td>
+            <td>${data_client['name']}</td>
+            <td>${data_client['email']}</td>
+            <td>${data_client['endpoint']}</td>
+            <td>${data_client['allowed_ips']}</td>
+            <td>${convertBytes(Number(data_client['transfer_rx']))}</td>
+            <td>${convertBytes(Number(data_client['transfer_tx']))}</td>
+            <td>${latest_handshake_client}</td>
+          </tr>
+        `
+        $('#body_client_table').append(tr)
+    }
+
+    function create_row_interface(interface_name, interface_data){
+        tr = `<tr>
+            <td>${interface_name}</td>
+            <td>${interface_data['listen_port']}</td>
+            <td>${interface_data['peers'].length}</td>
+            <td>${interface_data['public_key']}</td>
+          </tr>
+        `
+        $('#body_interface_table').append(tr)
+    }
+
+    
+
+
+
+    $(document).ready(function() {
+
+        wg_interface = $("#wg-interface")
+        wg_public_key = $("#wg-public-key")
+        wg_listen_port = $("#wg-listen-port")
+        number_of_peers = $("#number-of-peers")
+
+      var es = new ReconnectingEventSource('/events/data-monitor/');
+    
+      es.addEventListener('message', function (e) {
+          data_obj = JSON.parse(e.data) // convert to object
+          if (data_obj.status == true && data_obj.data != "") { 
+
+            // add data to interface table
+            interfaces = Object.keys(data_obj.data)
+            $("#body_interface_table").empty()
+            for (const interface of interfaces) { 
+                create_row_interface(interface, data_obj.data[interface])
+            }
+
+            // add data to peer table
+            $("#body_client_table").empty()
+            for (const key in data_obj.data) {
+                /* wg_interface.text(key) 
+                wg_public_key.text(data_obj.data[key]['public_key'])
+                wg_listen_port.text(data_obj.data[key]['listen_port'])
+                number_of_peers.text(data_obj.data[key]['peers'].length) */
+
+                for (client of data_obj.data[key]['peers']) {
+                    console.log(client)
+                    create_row_client(key, client)
+                }
+            }
+            
+          } else {
+            $("#body_client_table").empty()
+          }
+      }, false);
+      
+     /* es.addEventListener('stream-reset', function (e) {
+          // ... client fell behind, reinitialize ...
+          console.log(123456)
+      }, false);
+      */
+    })
+    </script>
+{% endblock %}

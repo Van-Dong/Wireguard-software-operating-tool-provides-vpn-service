@@ -1,0 +1,361 @@
+{% extends 'base/master.html' %}
+
+{% block title %}User Settings{% endblock %}
+
+{% block content %}
+<!-- Wireguard clients content -->
+<div class="row mx-1" style="overflow: auto; max-height: 800px;">
+    <!-- Header content -->
+    <div class="ps-3 pt-2 d-flex ">
+        <h2>User settings </h2>
+
+        <div class="btn-group-import-export ms-auto">
+            <button style="height: 2rem;" class="fs-7 btn btn-outline-primary p-1" data-bs-toggle="modal"
+                data-bs-target="#modal_new_user">
+                <i class="fs-6 bi bi-plus-circle-fill me-1"></i>New User
+            </button>
+            <button type="button" class="btn btn-primary ms-3 btn-import" data-bs-toggle="modal"
+                data-bs-target="#modal_import_data">Import</button>
+            <a href="/export/user/" class="btn btn-success ms-3 btn-export">Export</a>
+        </div>
+    </div>
+
+    {% for user in users %}
+    <!-- Main content -->
+    <div class="user-{{user.id}} col-sm-9 col-md-5 col-xl-3 col-xxl-3 my-3">
+        <div class="card shadow-sm">
+
+            <!-- Card header -->
+            <div class="card-header bg-white fs-6">
+                <div class="btn-group-for-client" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-edit-user" data-bs-toggle="modal"
+                        data-bs-target="#modal_edit_user" data-clientid="{{user.id}}">Edit</button>
+                    <button type="button" class="btn btn-outline-danger btn-delete-user" data-bs-toggle="modal"
+                        data-bs-target="#modal_delete_user" data-clientid="{{user.id}}">Delete</button>
+                </div>
+
+            </div>
+            <div class="card-body">
+                <span class="card-text card-box-text"><i class="me-2 bi bi-person-fill"></i>{{user.username}}</span>
+                <span class="card-text card-box-text"><i class="me-2 bi bi-envelope-fill"></i>{{user.email}}</span>
+                <span class="card-text card-box-text"><i class="me-2 bi bi-person-vcard-fill"></i>{% if user.is_staff == True%}Adminstrator{% else %}Manager{% endif %}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
+
+{% block modal %}
+
+<!-- Modal add new user -->
+<div class="modal fade" id="modal_new_user">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Add New User</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form name="form_new_user" id="form_new_user" novalidate="novalidate">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="user_name" class="control-label">Name</label>
+                        <input type="text" class="form-control" id="user_name" name="user_name" placeholder="User Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="user_email" class="control-label">Email</label>
+                        <input type="text" class="form-control" id="user_email" name="user_email" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <label for="user_password" class="control-label">Password</label>
+                        <input type="password" class="form-control" id="user_password" name="user_password" value=""
+                            placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <div class="d-inline">
+                            <input type="checkbox" id="is_admin">
+                            <label class="control-label" for="is_admin">
+                                Admin
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal"
+                        id="btn_confirm_new_user">Save</button>
+                </div>
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal edit user -->
+<div class="modal fade" id="modal_edit_user">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Edit User Form</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form name="form_edit_user" id="form_edit_user" novalidate="novalidate">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_user_name" class="control-label">Name</label>
+                        <input type="text" class="form-control" id="edit_user_name" name="edit_user_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_user_email" class="control-label">Email</label>
+                        <input type="text" class="form-control" id="edit_user_email" name="edit_user_email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_user_password" class="control-label">Password</label>
+                        <input type="password" class="form-control" id="edit_user_password" name="edit_user_password"
+                            value="" placeholder="Set New Password">
+                    </div>
+                    <div class="form-group">
+                        <div class="d-inline">
+                            <input type="checkbox" id="edit_is_admin" name="edit_is_admin">
+                            <label class="control-label" for="edit_is_admin">
+                                Admin
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal"
+                        id="btn_confirm_edit_user">Save</button>
+                </div>
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal delete user -->
+<div class="modal fade" id="modal_delete_user">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-danger">
+                <h4 class="modal-title">Confirm Delete User</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>Are you sure to delete this user?</p>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                    id="btn_confirm_delete_user">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+    // List user
+    let users = '{{ users|escapejs }}';  // convert object data in template to string in javascript
+    users = users.replaceAll("\'", "\"").replaceAll("True", "true").replaceAll("False", "false")
+    users = JSON.parse(users);
+
+    $(document).ready(function () {
+        // Start delete user 
+        btn_confirm_delete_user = $("#btn_confirm_delete_user")
+        $(".btn-delete-user").click(function () {
+            btn_confirm_delete_user.val($(this).attr('data-clientid'))
+        })
+
+        btn_confirm_delete_user.click(function () {
+            id = $(this).val()
+            fetch(`/users/${id}/`, {
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                            $(`div.user-${id}`).remove()
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End delete user
+
+        // Start edit user
+        btn_confirm_edit_user = $("#btn_confirm_edit_user")
+        edit_user_name = $("#edit_user_name")
+        edit_user_email = $("#edit_user_email")
+        edit_user_password = $("#edit_user_password")
+        edit_is_admin = $("#edit_is_admin")
+
+        $(".btn-edit-user").click(function () {
+            id = $(this).attr('data-clientid')
+            btn_confirm_edit_user.val(id)
+            user = users.find(element => element.id == id)
+            // console.log(user)
+
+            edit_user_name.val(user.username)
+            edit_user_email.val(user.email)
+            edit_is_admin[0].checked = user.is_staff
+
+        })
+        $("#form_edit_user").submit(function (event) {
+            event.preventDefault()
+            id = btn_confirm_edit_user.val()
+            fetch(`/users/${id}/`, {
+                method: "PATCH",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: $("#edit_user_name").val(),
+                    email: $("#edit_user_email").val(),
+                    password: $("#edit_user_password").val(),
+                    is_staff: $("#edit_is_admin").is(':checked')
+                })
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', 'Update user successfully')
+                            setTimeout(function () {
+                                window.location.href = "/users/";
+                            }, 3000);
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', convertObjToStr(err))
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+
+        })
+        // End edit user   
+
+        // Start add new user
+        $("#form_new_user").submit(function (event) {
+            event.preventDefault()
+            console.log('123')
+            fetch("/users/", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: $("#user_name").val(),
+                    email: $("#user_email").val(),
+                    password: $("#user_password").val(),
+                    is_staff: $("#is_admin").is(':checked')
+                })
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', 'Create new User successfully')
+                            setTimeout(function () {
+                                window.location.href = "/users/";
+                            }, 3000);
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', convertObjToStr(err))
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+        })
+        // End add new user
+
+        // Start import data
+        $('#form_import_data').submit(function (e) {
+            const MAX_SIZE_FILE = 3 * 1024 * 1024;  // 3MB
+            e.preventDefault()
+            var formData = new FormData();
+            var fileField = document.getElementById('file_import');
+
+            var file = fileField.files[0];
+
+            if (!file) {
+                createToast('danger', "You must upload file!")
+                return false;
+            }
+
+            if (file.type != 'application/json') {
+                createToast('danger', `Type of file must be .json!`)
+                return false;
+            }
+
+            if (file.size > MAX_SIZE_FILE) {
+                createToast('danger', `File ${file.name} is too big. Limit size is 3MB.`)
+                return false;
+            }
+
+            formData.append('file', file);
+
+            fetch('/import/user/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                            setTimeout(() => window.location.reload(), 2000)
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End import data
+    })
+</script>
+{% endblock %}

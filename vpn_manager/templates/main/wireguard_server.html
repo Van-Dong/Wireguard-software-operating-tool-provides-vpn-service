@@ -1,0 +1,592 @@
+{% extends 'base/master.html' %}
+
+{% block title %}Wireguard Server{% endblock %}
+
+
+{% block content %}
+<div class="row mx-1" id="content-clients" style="overflow: auto; max-height: 600px;">
+    <!-- Header content --> 
+    <div class="ps-3 pt-2 d-flex">
+        <h2 class="ps-3 pt-2">Wireguard Interface</h2>
+        <div class="btn-group-import-export ms-auto">
+            <button type="button" class="btn btn-primary ms-3 btn-import"
+                    data-bs-toggle="modal" data-bs-target="#modal_import_data">Import</button>
+            <a href="/export/interface/" class="btn btn-success ms-3 btn-export">Export</a>
+        </div>
+    </div>
+
+    {% for interface in interfaces %}
+    <!-- Main content -->
+    <div class="interface-{{interface.id}} col-sm-12 col-md-9 col-lg-6 col-xl-4 col-xxl-3 my-3">
+        <div>
+            <div class="card shadow-sm">
+                <!-- Card header - btn-group-for-interface -->
+                <div class="card-header bg-white fs-6">
+                    <div class="btn-group-for-interface" role="group">
+                        <a href="#" class="btn btn-outline-primary btn-detail-interface" data-bs-toggle="modal" data-bs-target="#modal_display_detail_interface" data-interfaceid="{{interface.id}}">Detail</a>
+                        <a href="#" class="btn btn-outline-danger btn-disable-interface" data-bs-toggle="modal" data-bs-target="#modal_confirm_disable_interface" data-interfaceid="{{interface.id}}">Disable</a>
+                        <a href="#" class="btn btn-outline-danger btn-edit-interface" data-bs-toggle="modal" data-bs-target="#modal_edit_interface" data-interfaceid="{{interface.id}}">Edit</a>
+                        <a href="#" class="btn btn-outline-danger btn-delete-interface" data-bs-toggle="modal" data-bs-target="#modal_confirm_delete_interface" data-interfaceid="{{interface.id}}">Delete</a>
+                    </div>
+                </div>
+        
+                <!-- Card body - content-for-client -->
+                <div class="interface-box">
+                    <div class="overlay" style="visibility: {% if interface.enabled == True %}hidden{% else %}visible{% endif %};">
+                        <i class="paused-interface bi bi-play-fill" id="paused_interface_{{interface.id}}" data-interfaceid="{{interface.id}}"></i>
+                    </div>
+                    <div class="card-body">
+                        <span class="card-text card-box-text"><strong>Name:</strong> <small class="badge bg-secondary">{{interface.name}}</small> </span>
+                        <span class="card-text card-box-text"><strong>Listening port:</strong> <small class="badge bg-secondary">{{interface.listen_port}}</small> </span>
+                        <span class="card-text card-box-text"><i class="me-1 bi bi-clock-fill"></i>{{interface.created_at}}</span>
+                        <span class="card-text card-box-text"><i class="me-1 bi bi-clock-history"></i>{{interface.updated_at}}</span>
+                        <span class="card-text card-box-text"><strong>Address:</strong>
+                        {% for ip in interface.addresses %}
+                            <small class="badge bg-secondary">{{ip}}</small>
+                        {% endfor %}
+                    </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block modal %}
+
+<!-- Modal confirm delete interface -->
+<div class="modal fade" id="modal_confirm_delete_interface">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-danger">
+                <h4 class="modal-title">Confirm Delete interface</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure to delete this interface?</p>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="btn_confirm_delete_interface">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirm disable interface -->
+<div class="modal fade" id="modal_confirm_disable_interface">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-danger">
+                <h4 class="modal-title">Confirm Disable interface</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+
+            <div class="modal-body">
+                <p>Are you sure to disable this interface?</p>
+            </div>
+
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="btn_confirm_disable_interface">Disable</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal add edit interface -->
+    <div class="modal fade" id="modal_edit_interface">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit interface</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form method="post" name="form_edit_interface" id="form_edit_interface" novalidate="novalidate">
+                    <div class="modal-body">
+
+                    <!-- Name interface -->
+                        <div class="form-group">
+                            <label for="edit_interface_name" class="control-label">Name Interface</label>
+                            <input type="text" class="form-control" id="edit_interface_name" name="edit_interface_name" placeholder="Name interface" value="">
+                        </div>
+
+                            <!-- Server Interface Addresses - Tags Input -->
+                        <div class="form-group">
+                            <label for="edit_interface_addresses" class="control-label">Interface Addresses</label>
+                            <div class="form-control"> 
+                                <ul id="edit_interface_addresses_tagsinput" class="tagsinput">
+                                    <input type="text" data-role="tagsinput" class="form-control" id="edit_interface_addresses">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Listen Port -->
+                        <div class="form-group">
+                            <label for="edit_listen_port" class="control-label">Listening Port</label>
+                            <input type="text" class="form-control" id="edit_listen_port" name="edit_listen_port"
+                                placeholder="Listen Port" value="">
+                        </div>
+
+                        <!-- Pre Up -->
+                        <div class="form-group">
+                            <label for="edit_pre_up" class="control-label">Pre Up Script</label>
+                            <input type="text" class="form-control" id="edit_pre_up" name="edit_pre_up" placeholder="Pre Up Script"
+                                value="">
+                        </div>
+
+                        <!-- Post up -->
+                        <div class="form-group">
+                            <label for="edit_post_up" class="control-label">Post Up Script</label>
+                            <input type="text" class="form-control" id="edit_post_up" name="edit_post_up" placeholder="Post Up Script"
+                                value="">
+                        </div>
+
+                        <!-- Pre Down -->
+                        <div class="form-group">
+                            <label for="edit_pre_down" class="control-label">Pre Down Script</label>
+                            <input type="text" class="form-control" id="edit_pre_down" name="edit_pre_down"
+                                placeholder="Pre Down Script" value="">
+                        </div>
+
+                        <!-- Post Down -->
+                        <div class="form-group">
+                            <label for="edit_post_down" class="control-label">Post Down Script</label>
+                            <input type="text" class="form-control" id="edit_post_down" name="edit_post_down"
+                                placeholder="Post Down Script" value="">
+                        </div>
+
+
+                        <!-- Enable after creation checkbox -->
+                        <div class="form-group">
+                            <div class="icheck-primary d-inline">
+                                <input type="checkbox" id="edit_interface_enabled">
+                                <label for="edit_interface_enabled" class="control-label">
+                                    Enable after edit
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Public and Private Keys -->
+                        <details>
+                            <summary><strong>Public and Private Keys</strong>
+                                <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                    title="If you leave both blank, the server will generate the key for you. 
+                                    Note: if you use your own key, you must give a pair of keys, not just one key">
+                                </i>
+                            </summary>
+                            <!-- Public Key -->
+                            <div class="form-group" style="margin-top: 1rem">
+                                <label for="edit_interface_public_key" class="control-label">
+                                    Public Key
+                                </label>
+                                <input type="text" class="form-control" id="edit_interface_public_key" name="edit_interface_public_key"
+                                    placeholder="Leaving blank will autogenerate" aria-invalid="false">
+                            </div>
+                            <!-- Private Key -->
+                            <div class="form-group">
+                                <label for="edit_interface_private_key" class="control-label">
+                                    Private Key
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="edit_interface_private_key"
+                                    name="edit_interface_private_key"
+                                    placeholder="Leaving blank will autogenerate">
+                                    <button type="button" class="btn btn-danger" id="private_key_show_btn">Show</button>
+                                </div>
+                                
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" id="btn_confirm_update_interface">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+<!-- Modal display detail wg interface -->
+<div class="modal fade" id="modal_display_detail_interface">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-info">
+                <h4 class="modal-title">Detail of WireGuard Network Interface</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+WireGuard
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        // set default server interface addresses
+        // {% for ip in interface.addresses %}
+        //     tagsInputValueList['addresses'].push("{{ip}}")
+        // {% endfor %}
+        // showTags(document.querySelector("#addresses"))
+
+        // List interface in variable
+        let interfaces = '{{ interfaces|escapejs }}';  // convert object data in template to string in javascript
+        interfaces = interfaces.replaceAll("\'", "\"").replaceAll("True", "true").replaceAll("False", "false")
+        interfaces = JSON.parse(interfaces); // now interfaces is array in js
+
+        
+        // show private key btn
+        $("#private_key_show_btn").click(function () {
+            private_key_element = $("#edit_interface_private_key")
+            if (private_key_element.attr("type") === "text") {
+                private_key_element.attr("type", "password")
+            } else {
+                private_key_element.attr("type", "text")
+            }
+        })
+
+        // Display detail wireguard network interface 
+                $(".btn-detail-interface").click(function() {
+                    id = $(this).attr('data-interfaceid')
+                    fetch(`/wg-server/detail/${id}/`, {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => {
+                            if (response.ok) { // Mã trạng thái 200
+                                response.json().then(res => {
+                                    // Success 
+                                    data = res.data
+                                    create_detail_interface_element(data)
+                                    
+                                })
+                            } else if (response.status === 400) {  // Mã trạng thái 400
+                                return response.json().then(err => {   //
+                                    // Failed 
+                                    createToast('danger', err['message'])
+                                });
+                            } else {
+                                throw new Error('Unexpected error: ' + response.status);
+                            }
+                        })
+                        .catch(error => createToast('danger', error))
+                })
+        
+
+              // Start Disable interface 
+              btn_confirm_disable_interface = $("#btn_confirm_disable_interface")
+              $(".btn-disable-interface").click(function() {
+                  btn_confirm_disable_interface.val($(this).attr('data-interfaceid'))
+              })
+              btn_confirm_disable_interface.click(function() {
+                  id = $(this).val()
+                  // console.log(id)
+                  fetch(`/disable/interface/${id}/`, {
+                      method: "POST",
+                      headers: {
+                          'Content-Type': 'application/json'
+                      }
+                  })
+                      .then(response => {
+                          if (response.ok) { // Mã trạng thái 200
+                              response.json().then(res => {
+                                  // Success 
+                                  createToast('info', res['message'])
+                                  edit_interface = interfaces.find(element => element.id == id)
+                                  edit_interface.enabled = true
+                                  $(`#paused_interface_${id}`).parent().css('visibility', 'visible')
+                              })
+                          } else if (response.status === 400) {  // Mã trạng thái 400
+                              return response.json().then(err => {   //
+                                  // Failed 
+                                  createToast('danger', err['message'])
+                              });
+                          } else {
+                              throw new Error('Unexpected error: ' + response.status);
+                          }
+                      })
+                      .catch(error => createToast('danger', error))
+      
+              })
+              // End disable interface
+      
+              // Start Enable interface
+              $(".paused-interface").click(function() {
+                  id = $(this).attr('data-interfaceid')
+      
+                  fetch(`/enable/interface/${id}/`, {
+                      method: "POST",
+                      headers: {
+                          'Content-Type': 'application/json'
+                      }
+                  })
+                      .then(response => {
+                          if (response.ok) { // Mã trạng thái 200
+                              response.json().then(res => {
+                                  // Success 
+                                  edit_interface = interfaces.find(element => element.id == id)
+                                  edit_interface.enabled = true
+                                  createToast('info', res['message'])
+                                  $(this).parent().css('visibility', 'hidden')
+                              })
+                          } else if (response.status === 400) {  // Mã trạng thái 400
+                              return response.json().then(err => {   //
+                                  // Failed 
+                                  createToast('danger', err['message'])
+                              });
+                          } else {
+                              throw new Error('Unexpected error: ' + response.status);
+                          }
+                      })
+                      .catch(error => createToast('danger', error))
+      
+              })
+              // End enable interface
+      
+      
+              // Start Delete interface
+              btn_confirm_delete_interface = $("#btn_confirm_delete_interface")
+              $(".btn-delete-interface").click(function() {
+                  btn_confirm_delete_interface.val($(this).attr('data-interfaceid'))
+              })
+      
+              btn_confirm_delete_interface.click(function() {
+                  id = $(this).val()
+                  fetch(`/wg-server/interface/${id}/`, {
+                      method: "DELETE",
+                      headers: {
+                          'Content-Type': 'application/json'
+                      }
+                  })
+                      .then(response => {
+                          if (response.ok) { // Mã trạng thái 200
+                              response.json().then(res => {
+                                  // Success 
+                                  createToast('info', res['message'])
+                                  $(`div.interface-${id}`).remove()
+                              })
+                          } else if (response.status === 400) {  // Mã trạng thái 400
+                              return response.json().then(err => {   //
+                                  // Failed 
+                                  createToast('danger', err['message'])
+                              });
+                          } else {
+                              throw new Error('Unexpected error: ' + response.status);
+                          }
+                      })
+                      .catch(error => createToast('danger', error))
+              })
+              // End delete interface
+      
+              // Start import data
+              $('#form_import_data').submit(function (e) {
+                const MAX_SIZE_FILE = 10 * 1024 * 1024;  // 10MB
+                e.preventDefault()
+                var formData = new FormData();
+                var fileField = document.getElementById('file_import');
+    
+                var file = fileField.files[0];
+    
+                if (!file) {
+                    createToast('danger', "You must upload file!")
+                    return false;
+                }
+    
+                if (file.type != 'application/json') {
+                    createToast('danger', `Type of file must be .json!`)
+                    return false;
+                }
+    
+                if (file.size > MAX_SIZE_FILE) {
+                    createToast('danger', `File ${file.name} is too big. Limit size is 3MB.`)
+                    return false;
+                }
+    
+                formData.append('file', file);
+    
+                fetch('/import/interface/', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            response.json().then(res => {
+                                // Success 
+                                createToast('info', res['message'])
+                                setTimeout(() => window.location.reload(), 2000)
+                            })
+                        } else if (response.status === 400) {  // Mã trạng thái 400
+                            return response.json().then(err => {   //
+                                // Failed 
+                                createToast('danger', err['message'])
+                            });
+                        } else {
+                            throw new Error('Unexpected error: ' + response.status);
+                        }
+                    })
+                    .catch(error => createToast('danger', error))
+            })
+            // End import data
+
+             // Start Edit interface
+        btn_edit_interface = $(".btn-edit-interface")
+        btn_confirm_update_interface = $("#btn_confirm_update_interface")
+        edit_interface_name = $("#edit_interface_name")
+        edit_listen_port = $("#edit_listen_port")
+        edit_pre_up = $("#edit_pre_up")
+        edit_post_up = $("#edit_post_up")
+        edit_pre_down = $("#edit_pre_down")
+        edit_post_down = $("#edit_post_down")
+        edit_interface_public_key = $("#edit_interface_public_key")
+        edit_interface_private_key = $("#edit_interface_private_key")
+        edit_interface_enabled = $("#edit_interface_enabled")
+            
+        btn_edit_interface.click(function() {  // add data to edit modal form
+            id = $(this).attr('data-interfaceid')
+            btn_confirm_update_interface.val(id)
+            edit_interface = interfaces.find(element => element.id == id)
+            
+            // add data to form edit interface
+            edit_interface_name.val(edit_interface.name)
+            edit_listen_port.val(edit_interface.listen_port)
+            edit_pre_up.val(edit_interface.pre_up)
+            edit_post_up.val(edit_interface.post_up)
+            edit_pre_down.val(edit_interface.pre_down)
+            edit_post_down.val(edit_interface.post_down)
+
+            edit_interface_enabled.attr('checked', edit_interface.enabled);
+            edit_interface_public_key.val(edit_interface.public_key)
+            edit_interface_private_key.val(edit_interface.private_key)
+            
+            tagsInputValueList['edit_interface_addresses'] = edit_interface.addresses
+            showTags(document.querySelector("#edit_interface_addresses"))
+        })
+
+        $("#form_edit_interface").submit(function(event) {
+            event.preventDefault()
+            id = btn_confirm_update_interface.val()
+
+
+            fetch(`/wg-server/interface/${id}/`, {
+                method: "POST", 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: edit_interface_name.val(),
+                    addresses: tagsInputValueList["edit_interface_addresses"],
+                    enabled: edit_interface_enabled.is(':checked'),
+                    listen_port: edit_listen_port.val(),
+                    pre_up: edit_pre_up.val(),
+                    post_up: edit_post_up.val(),
+                    pre_down: edit_pre_down.val(),
+                    post_down: edit_post_down.val(),
+                    public_key: edit_interface_public_key.val(),
+                    private_key: edit_interface_private_key.val(),
+                    // enabled: edit_enabled.is(':checked'),
+                }) 
+            })
+            .then(response => {
+                if (response.ok) { // Mã trạng thái 200
+                    response.json().then(res => {
+                        // Success 
+                        createToast('info', "Update interface is successfully!")
+
+                        if (!edit_interface_enabled.is(':checked')) {
+                            $(`#paused_interface_${id}`).parent().css('visibility', 'visible')
+                        }
+
+                        setTimeout(function() {
+                            window.location.href = "/wg-server/interfaces/";
+                        }, 3000);
+
+                    }) 
+                } else if (response.status === 400) {  // Mã trạng thái 400
+                    return response.json().then(err => {   //
+                        // Failed 
+                        console.log(err)
+                        delete err.status;
+                        createToast('danger', convertObjToStr(err))
+                    });
+                } else {
+                    throw new Error('Unexpected error: ' + response.status);
+                }
+            })
+            .catch(error => createToast('danger', error))
+        })
+        // End update interface
+    });
+
+    function create_detail_interface_element(data) {
+        
+
+        addresses = ''
+        for (ip of data['addresses']) {
+            addresses += `<small class="badge bg-secondary">${ip}</small>\n`
+        }
+
+        status = ''
+        if (data['enabled'] == true) {
+            status = '<small class="badge bg-success">Running</small>'
+        } else {
+            status = '<small class="badge bg-danger">Off</small> '
+        }
+
+        vpnconnections = ''
+        for (peer of data['list_vpnconnection']) {
+            if (peer[1] == true) {
+                vpnconnections += `<small class="badge bg-success">${peer[0]}</small>\n`
+            } else {
+                vpnconnections += `<small class="badge bg-danger">${peer[0]}</small>\n`
+            }
+            
+        }
+
+        
+        div = `<div>
+                    <span class="card-text card-box-text"><strong>Name:</strong> <small class="badge bg-secondary">${data['name']}</small> </span>
+                    <span class="card-text card-box-text"><strong>Listening port:</strong> <small class="badge bg-secondary">${data['listen_port']}</small> </span>
+                    <span class="card-text card-box-text"><strong>Address:</strong>
+                        ${addresses}
+                    </span>
+                    <span class="card-text card-box-text"><strong>Public key:</strong> <small class="badge bg-secondary">${data['public_key']}</small> </span>
+                    <span class="card-text card-box-text"><strong>Status:</strong> 
+                        ${status}
+                    </span>
+                    <span class="card-text card-box-text"><strong>List VPN connection:</strong> 
+                        ${vpnconnections}
+                    </span>
+                    <span class="card-text card-box-text"><strong>Pre up script:</strong> <small class="badge bg-secondary">${data['pre_up']}</small> </span>
+                    <span class="card-text card-box-text"><strong>Post up script:</strong> <small class="badge bg-secondary">${data['post_up']}</small> 
+                    <span class="card-text card-box-text"><strong>Pre down script:</strong> <small class="badge bg-secondary">${data['pre_down']}</small> </span>
+                    <span class="card-text card-box-text"><strong>Post down script:</strong> <small class="badge bg-secondary">${data['post_down']}</small> </span>
+
+                    <span class="card-text card-box-text"><strong>Created at: </strong></i>${data['created_at']}</span>
+                    <span class="card-text card-box-text"><strong>Updated at: </strong></i>${data['updated_at']}</span>
+                </div>`
+        console.log(div)
+        container_element = $("#modal_display_detail_interface .modal-body")
+        console.log(container_element)
+        container_element.empty()
+        container_element.append(div)
+    }
+</script>
+{% endblock %}

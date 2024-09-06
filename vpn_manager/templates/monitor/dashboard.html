@@ -1,0 +1,267 @@
+{% extends 'base/master.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Nav pills -->
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="pill" href="#statistic-peer">Statistic Peers</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link active" data-bs-toggle="pill" href="#statistic-transfer">Statistic Transfer</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="pill" href="#statistic-vpnconnection">Statistic VPNConnection</a>
+  </li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+  <div id="statistic-peer" class="tab-pane container fade mt-2">
+    <canvas class="d-inline-block mb-4" id="peerEnabledChart" style="width:100%;max-width:600px"></canvas>
+    <canvas class="d-inline-block mb-4" id="peerConnectedChart" style="width:100%;max-width:600px"></canvas>
+  </div>
+
+  <div id="statistic-transfer" class="tab-pane container active mt-2">
+    <canvas class="d-inline-block mb-4" id="five-hour-Chart" style="width:100%;max-width:600px"></canvas>
+    <canvas class="d-inline-block mb-4" id="one-day-Chart" style="width:100%;max-width:600px"></canvas>
+    <canvas class="d-inline-block mb-4" id="one-week-Chart" style="width:100%;max-width:600px"></canvas>
+    <canvas class="d-inline-block mb-4" id="one-month-Chart" style="width:100%;max-width:600px"></canvas>
+  </div>
+  <div id="statistic-vpnconnection" class="tab-pane container fade">
+    <div class="form-group mt-2" style="max-width: 170px;">
+        <label for="vpnconnection_statistic_select" class="control-label">Select VPNConnection</label>
+        <select size="1" id="vpnconnection_statistic_select" class="form-control"  data-placeholder="Select vpnconnection statistic">
+            {% for x in list_vpnconnection %}
+            <option value="{{x.id}}">{{x.name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <canvas class="d-inline-block mb-4" id="one-day-Chart2" style="width:100%;max-width:600px"></canvas>
+        <canvas class="d-inline-block mb-4" id="one-week-Chart2" style="width:100%;max-width:600px"></canvas>
+    </div>
+    <div class="change_endpoint_container" style="max-width: 400px;">
+        <div class="my-2">
+            <div class="card shadow-sm">
+                <!-- Card header -->
+                <div class="card-header bg-gray">Endpoint</div>
+                <div class="card-body bg-white">
+                    <table class="table"> 
+                        <thead>
+                          <tr>
+                            <th scope="col">Endpoint</th>
+                            <th scope="col">Datetime</th>
+                          </tr>
+                        </thead>
+                        <tbody id="body_statistic_peer_table">
+                            
+                        </tbody>
+                      </table>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+{% load static %}
+<script src="{% static 'chart/Chart.js' %}"></script>
+<script>
+ 
+    // Peer Enabled chart
+    var xValues = ["Enabled", "Disabled"];
+    var yValues = {{ enabled_peer }}
+    var barColors = [
+        "#00aba9",
+        "#b91d47",
+    ];
+
+    new Chart("peerEnabledChart", {
+        type: "pie",
+        data: {
+            labels: xValues,
+            datasets: [{
+                backgroundColor: barColors,
+                data: yValues
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Number of peers ready to connect"
+            }
+        }
+    });
+
+    // Peer connected chart
+    var xValues = ["Have been connected", "Never connected"];
+    var yValues = {{ connected_peer }}
+    var barColors = [
+        "#00aba9",
+        "#b91d47",
+    ];
+
+    new Chart("peerConnectedChart", {
+        type: "pie",
+        data: {
+            labels: xValues,
+            datasets: [{
+                backgroundColor: barColors,
+                data: yValues
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: "Number of peers have been connected"
+            },
+        }
+    });
+
+    // Change unit in transfer
+    function convertTransfer(data_tx, data_rx) {
+        max_value = Math.max(...data_tx)
+        max_value = Math.max(...data_rx, max_value)
+        let unit = 'B'
+        let exp = 1
+
+        if (max_value < 1024) {
+            unit = 'B'
+            exp = 0
+        } else if (max_value < 1024 ** 2) {
+            unit = 'KB'
+            exp = 1
+        } else if (max_value < 1024 ** 3) {
+            unit = 'MB'
+            exp = 2
+        } else if (max_value < 1024 ** 4) {
+            unit = 'GB'
+            exp = 3
+        } else if (max_value < 1024 ** 5) {
+            unit = 'TB'
+            exp = 4
+        } else {
+            unit = 'PB'
+            exp = 5
+        }
+
+        
+        let new_data_tx = data_tx.map(element => (element / (1024 ** exp)))
+        let new_data_rx = data_rx.map(element => (element / (1024 ** exp))) 
+        return { new_data_tx, new_data_rx, unit };
+    }
+
+    // Transfer Chart
+    function createTransferChart(id_element_chart, name_chart, labels, data_tx, data_rx) {
+            let result = convertTransfer(data_tx, data_rx)
+            data_tx = result.new_data_tx
+            data_rx = result.new_data_rx
+            let unit = result.unit
+
+
+            new Chart(id_element_chart, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Transmit',
+                            data: data_tx,
+                            backgroundColor: 'blue',
+                        },
+                        {
+                            label: 'Receive',
+                            data: data_rx,
+                            backgroundColor: 'red',
+                        },
+                    ],
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: name_chart,
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                callback: function(value, index, values) {
+                                    return value + ' ' + unit; // Thêm đơn vị vào giá trị
+                                }
+                            },
+                        }],
+                    },
+                },
+            });
+        }
+
+    // Five hour Chart
+    var tx = {{data_five_hours.tx}}
+    var rx = {{data_five_hours.rx}}
+    var labels = ['1 hour ago', '2 hour ago', '3 hour ago', '4 hour ago', '5 hour ago']
+    createTransferChart('five-hour-Chart', 'Transfer in five hour', labels, tx, rx)
+
+    var tx = {{data_one_day.tx}}
+    var rx = {{data_one_day.rx}}
+    var labels = ['6 hour ago', '12 hour ago', '18 hour ago', '24 hour ago']
+    createTransferChart('one-day-Chart', 'Transfer in one day', labels, tx, rx)
+
+    var tx = {{data_one_week.tx}}
+    var rx = {{data_one_week.rx}}
+    var labels = ['1 day ago', '2 days ago', '3 days ago', '4 days ago', '5 days ago', '6 days ago', '7 days ago']
+    createTransferChart('one-week-Chart', 'Transfer in one week', labels, tx, rx)
+
+    var tx = {{data_one_month.tx}}
+    var rx = {{data_one_month.rx}}
+    var labels = ['1 week ago', '2 weeks ago', '3 weeks ago', '4 weeks ago', '5 weeks ago']
+    createTransferChart('one-month-Chart', 'Transfer in one month', labels, tx, rx)
+
+
+    vpnconnection_statistic_select = $("#vpnconnection_statistic_select")
+    function statistic_peer(id) {
+        fetch(`/statistic-peer/${id}/`, {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                response.json().then(res => {
+                    data = res.data
+                    var labels = ['6 hour ago', '12 hour ago', '18 hour ago', '24 hour ago']
+                    createTransferChart('one-day-Chart2', 'Transfer in one day', labels, data.data_one_day.tx, data.data_one_day.rx)
+
+                    var labels = ['1 day ago', '2 days ago', '3 days ago', '4 days ago', '5 days ago', '6 days ago', '7 days ago']
+                    createTransferChart('one-week-Chart2', 'Transfer in one week', labels, data.data_one_week.tx, data.data_one_week.rx)
+                    console.log(data.list_endpoint)
+                    rows = ''
+                    for (x of data.list_endpoint) {
+                        rows += `<tr>
+                            <td>${x[0]}</td>
+                            <td>${x[1]}</td>
+                          </tr>\n
+                        `
+                    }
+                    $('#body_statistic_peer_table').empty()
+                    $('#body_statistic_peer_table').append(rows)
+                })
+            }
+        })
+    }
+    statistic_peer(vpnconnection_statistic_select.val()) // current peer
+
+    vpnconnection_statistic_select.change(function() {
+        id = $(this).val()
+        statistic_peer(id)
+    })
+    
+
+</script>
+{% endblock %}

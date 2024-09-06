@@ -1,0 +1,806 @@
+{% extends 'base/master.html' %}
+
+{% block title %}Wireguard Clients{% endblock %}
+
+{% block content %}
+
+<!-- Wireguard clients content -->
+<div class="row mx-1" id="content-clients" style="overflow: auto; max-height: 800px;">
+    <!-- Header content --> 
+    <div class="ps-3 pt-2 d-flex">
+        <h2 class="ps-3 pt-2">Wireguard Connection</h2>
+        {% if request.user.is_staff %}
+        <div class="btn-group-import-export ms-auto">
+            <button type="button" class="btn btn-primary ms-3 btn-import"
+                    data-bs-toggle="modal" data-bs-target="#modal_import_data">Import</button>
+            <a href="/export/vpnconnection/" class="btn btn-success ms-3 btn-export">Export</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main content -->
+    
+    <!-- List Clients -->
+
+  {% for client in clients %}
+
+  <div class="client-{{client.id}} col-sm-12 col-md-9 col-lg-6 col-xl-4 col-xxl-3 my-3">
+    <div>
+        <div class="card shadow-sm">
+            <!-- Card header - btn-group-for-client -->
+            <div class="card-header bg-white fs-6">
+                <div class="btn-group-for-client" role="group">
+                    <a href="/download/{{client.id}}/" class="btn btn-outline-primary">Download</a>
+                    <a href="#" class="btn btn-outline-primary btn-display-qrcode" data-bs-toggle="modal" data-bs-target="#modal_display_qrcode" data-clientid="{{client.id}}">QR Code</a>
+                    <a href="#" class="btn btn-outline-primary btn-send-email" data-bs-toggle="modal" data-bs-target="#modal_send_email" data-clientid="{{client.id}}">Email</a>
+    
+                    <div class="btn-group text-danger" role="group">
+                        <button type="button"
+                            class="btn btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            More
+                        </button>
+                        <ul class="dropdown-menu shadow-sm">
+                            <li><a class="dropdown-item btn-edit-client" href="#" data-bs-toggle="modal" data-bs-target="#modal_edit_client" data-clientid="{{client.id}}">Edit</a></li>
+                            <li><a class="dropdown-item btn-disable-client" href="#" data-bs-toggle="modal" data-bs-target="#modal_confirm_disable_client" data-clientid="{{client.id}}">Disable</a></li>
+                            <li><a class="dropdown-item btn-delete-client" href="#" data-bs-toggle="modal" data-bs-target="#modal_confirm_delete_client" data-clientid="{{client.id}}">Delete</a></li> 
+                        </ul>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Card body - content-for-client -->
+             <div class="client-box">
+                <div class="overlay" style="visibility: {% if client.enabled == True %}hidden{% else %}visible{% endif %};">
+                    <i class="paused-client bi bi-play-fill" id="paused_{{client.id}}" data-clientid="{{client.id}}"></i>
+                    <span class="d-none client-status">{% if client.enabled == True %}Enabled{% else %}Disabled{% endif %}</span>
+                </div>
+                <div class="card-body">
+                    <span class="card-text card-box-text"><i class="me-1 bi bi-person-fill"></i>{{client.name}}</span>
+                    <span class="card-text card-box-text"><i class="me-1 bi bi-envelope-fill"></i>{{client.email}}</span>
+                    <span class="card-text card-box-text"><i class="me-1 bi bi-clock-fill"></i>{{client.created_at}}</span>
+                    <span class="card-text card-box-text"><i class="me-1 bi bi-clock-history"></i>{{client.updated_at}}</span>
+                    <span class="card-text card-box-text"><i class="me-1 bi bi-modem-fill"></i> DNS {% if client.use_server_dns == True %}Enabled{% else %}Disabled{% endif %}</span>
+                    <span class="card-text card-box-text"><i class="me-1 bi bi-file-earmark-text-fill">{{client.additional_notes}}</i></span>
+                    
+                    <span class="card-text card-box-text"><strong>Interface:</strong> 
+                        {% if client.interface_id != none%}  
+                        <small class="badge bg-secondary">{{client.name_interface}}</small>
+                        {% else %} <small class="badge bg-danger">Not connected with any Wireguard Interface</small> {% endif %}
+                    </span>
+                    <span class="card-text card-box-text"><strong>IP Allocation</strong></span>
+                    {% for ip in client.allocated_ips %}
+                    <small class="badge bg-secondary">{{ip}}</small>
+                    {% endfor %}
+        
+                    <span class="card-text card-box-text"><strong>Allowed IPs</strong></span>
+                    {% for ip in client.allowed_ips %}
+                    <small class="badge bg-secondary">{{ip}}</small>
+                    {% endfor %}
+        
+                    <span class="card-text card-box-text"><strong>Extra Allowed IPs</strong></span>
+                    {% for ip in client.extra_allowed_ips %}
+                    <small class="badge bg-secondary">{{ip}}</small>
+                    {% endfor %}
+        
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+  {% endfor %}
+</div>
+{% endblock %}
+
+
+
+
+
+<!-- Modal for wireguard clients -->
+{% block modal %}
+
+<!-- Modal display QR Code -->
+<div class="modal fade" id="modal_display_qrcode">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-info">
+                <h4 class="modal-title">QR Code for Client</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body d-flex align-items-center justify-content-center" id="qrcode"></div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Send Email -->
+<div class="modal fade" id="modal_send_email">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-info">
+                <h4 class="modal-title">Send config for client by email</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="post" name="form_send_email" id="form_send_email" novalidate="novalidate">
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="" class="form-label">Please input email:</label>
+                    <input type="text" class="form-control" name="recipient_email" id="recipient_email" aria-describedby="email-input" required placeholder="Recipient Email"/>
+                </div>
+                
+            </div>
+
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" id="btn_confirm_send_email">Send</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Client -->
+<div class="modal fade" id="modal_edit_client">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Edit Wireguard Client</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Modal body and footer -->
+            <form method="post" name="form_edit_client" id="form_edit_client" novalidate="novalidate">
+                <!-- Modal body -->
+                <div class="modal-body">
+
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label for="edit_client_name" class="control-label">Name</label>
+                        <input type="text" class="form-control" id="edit_client_name" name="edit_client_name">
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="edit_client_email" class="control-label">Email</label>
+                        <input type="text" class="form-control" id="edit_client_email" name="edit_client_email">
+                    </div>
+                    
+                    <!-- Select interface -->
+                    <div class="form-group">
+                        <label for="edit_name_interface" class="control-label">WireGuard Interface</label>
+                        <select id="edit_name_interface" class="form-control" data-placeholder="Select an IP address">
+                        </select>
+                    </div>
+
+                    <!-- IP Allocation -->
+                    <div class="form-group">
+                        <label for="edit_client_allocated_ips" class="control-label">IP Allocation</label>
+                        <div class="form-control">
+                            <ul id="edit_client_allocated_ips_tagsinput" class="tagsinput">
+                                <li class="tag">
+                                    <span class="tag-value">10.252.1.1/32</span>
+                                    <span class="remove-tag bi bi-x-circle-fill"></span>
+                                </li>
+                                <input type="text" data-role="tagsinput" class="form-control"
+                                    id="edit_client_allocated_ips"> 
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Allowed IPs -->
+                    <div class="form-group">
+                        <label for="edit_client_allowed_ips" class="control-label">Allowed IPs
+                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                title="Specify a list of addresses that will get routed to the
+                                 server. These addresses will be included in 'AllowedIPs' of client config">
+                            </i>
+                        </label>
+                        <div class="form-control">
+                            <ul id="edit_client_allowed_ips_tagsinput" class="tagsinput">
+                                <li class="tag">
+                                    <span class="tag-value">0.0.0.0/0</span>
+                                    <span class="remove-tag bi bi-x-circle-fill"></span>
+                                </li>
+                                <input type="text" data-role="tagsinput" class="form-control"
+                                    id="edit_client_allowed_ips">
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Extra Allowed IPs -->
+                    <div class="form-group">
+                        <label for="edit_client_extra_allowed_ips" class="control-label">Extra Allowed IPs
+                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                title="Specify a list of addresses that will get routed to the
+                             client. These addresses will be included in 'AllowedIPs' of WG server config">
+                            </i>
+                        </label>
+                        <div class="form-control">
+                            <ul id="edit_client_extra_allowed_ips_tagsinput" class="tagsinput">
+                                <li class="tag">
+                                    <span class="tag-value">0.0.0.0/0</span>
+                                    <span class="remove-tag bi bi-x-circle-fill"></span>
+                                </li>
+                                <input type="text" data-role="tagsinput" class="form-control"
+                                    id="edit_client_extra_allowed_ips">
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Endpoint -->
+                    <div class="form-group">
+                        <label for="edit_client_endpoint" class="control-label">Endpoint
+                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                            title="Specifies the Public IP and port for the VPN Gateway you are connecting to.">
+                            </i>
+                        </label>
+                        <input type="text" class="form-control" id="edit_client_endpoint" name="edit_client_endpoint">
+                    </div>
+
+                    <!-- Use server DNS checkbox -->
+                    <div class="form-group">
+                        <div class="icheck-primary d-inline">
+                            <input type="checkbox" id="edit_use_server_dns" checked>
+                            <label for="edit_use_server_dns" class="control-label">
+                                Use server DNS
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Enable after creation checkbox -->
+                    <div class="form-group">
+                        <div class="icheck-primary d-inline">
+                            <input type="checkbox" id="edit_enabled" checked>
+                            <label for="edit_enabled" class="control-label">
+                                Enable after creation
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Public and Preshared Keys -->
+                    <details>
+                        <summary><strong>Public and Preshared Keys</strong>
+                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="right"
+                                title="If you don't want to let the server generate and store the
+                             client's private key, you can manually specify its public and preshared key here.">
+                            </i>
+                        </summary>
+                        <!-- Public Key -->
+                        <div class="form-group" style="margin-top: 1rem">
+                            <label for="edit_client_public_key" class="control-label">
+                                Public Key
+                            </label>
+                            <input type="text" class="form-control" id="edit_client_public_key" name="edit_client_public_key"
+                                placeholder="Autogenerated">
+                        </div>
+                        <!-- Preshared Key -->
+                        <div class="form-group">
+                            <label for="edit_client_preshared_key" class="control-label">
+                                Preshared Key
+                            </label>
+                            <input type="text" class="form-control" id="edit_client_preshared_key"
+                                name="edit_client_preshared_key"
+                                placeholder="Autogenerated - enter &quot;-&quot; to skip generation">
+                        </div>
+                    </details>
+
+                    <!-- Additional configuration -->
+                    <details class="mt-2">
+                        <summary><strong>Additional configuration</strong>
+                        </summary>
+                        <div class="form-group">
+                            <label for="edit_additional_notes" class="control-label">Notes</label>
+                            <textarea class="form-control" style="min-height: 6rem;" id="edit_additional_notes"
+                                name="edit_additional_notes" placeholder="Additional notes about this client"></textarea>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Modal footer -->
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" id="btn_confirm_update_client">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirm disable client -->
+<div class="modal fade" id="modal_confirm_disable_client">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-danger">
+                <h4 class="modal-title">Confirm Disable Client</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+
+            <div class="modal-body">
+                <p>Are you sure to disable this client?</p>
+            </div>
+
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="btn_confirm_disable_client">Disable</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirm delete client -->
+<div class="modal fade" id="modal_confirm_delete_client">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header text-bg-danger">
+                <h4 class="modal-title">Confirm Delete Client</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+
+            <div class="modal-body">
+                <p>Are you sure to delete this client?</p>
+            </div>
+
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="btn_confirm_delete_client">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal loading -->
+<div class="modal fade" id="modal_loading">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+
+                    <div class="spinner-border" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+              
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+<!-- Script for wireguard clients -->
+{% block script %}
+{% load static %}
+<script src="{% static 'qrcodejs/qrcode-1.0.0.min.js' %}"></script>
+
+<script>
+
+    // List clients in variable
+    let clients = '{{ clients|escapejs }}';  // convert object data in template to string in javascript
+    clients = clients.replaceAll("\'", "\"").replaceAll("True", "true").replaceAll("False", "false").replaceAll("None", null)
+
+    clients = JSON.parse(clients); // now clients is array in js
+
+    $(document).ready(function() {
+
+
+
+        // Start Disable client 
+        btn_confirm_disable_client = $("#btn_confirm_disable_client")
+        $(".btn-disable-client").click(function() {
+            btn_confirm_disable_client.val($(this).attr('data-clientid'))
+        })
+        btn_confirm_disable_client.click(function() {
+            id = $(this).val()
+            // console.log(id)
+            fetch(`/disable/peer/${id}/`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                            $(`#paused_${id}`).parent().css('visibility', 'visible')
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+
+        })
+        // End disable client
+
+
+        // Start Enable client
+        $(".paused-client").click(function() {
+            id = $(this).attr('data-clientid')
+
+            fetch(`/enable/peer/${id}/`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                            $(this).parent().css('visibility', 'hidden')
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+
+        })
+        // End enable client
+
+
+        // Start Delete client
+        btn_confirm_delete_client = $("#btn_confirm_delete_client")
+        $(".btn-delete-client").click(function() {
+            btn_confirm_delete_client.val($(this).attr('data-clientid'))
+        })
+
+        btn_confirm_delete_client.click(function() {
+            id = $(this).val()
+            fetch(`/peer/${id}/`, {
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                            $(`div.client-${id}`).remove()
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End delete client
+
+
+        // Start Edit client
+        btn_edit_client = $(".btn-edit-client")
+        btn_confirm_update_client = $("#btn_confirm_update_client")
+        edit_client_name = $("#edit_client_name")
+        edit_client_email = $("#edit_client_email")
+        edit_name_interface = $("#edit_name_interface")
+        edit_client_endpoint = $("#edit_client_endpoint")
+        edit_use_server_dns = $("#edit_use_server_dns")
+        edit_enabled = $("#edit_enabled")
+        edit_client_public_key = $("#edit_client_public_key")
+        edit_client_preshared_key = $("#edit_client_preshared_key")
+        edit_additional_notes = $("#edit_additional_notes")
+        
+        btn_edit_client.click(function() {  // add data to edit modal form
+            id = $(this).attr('data-clientid')
+            btn_confirm_update_client.val(id)
+            client = clients.find(element => element.id == id)
+            
+            // add data to form edit client
+            edit_client_name.val(client.name)
+            edit_client_email.val(client.email)
+            edit_client_endpoint.val(client.endpoint)
+
+            edit_use_server_dns.attr('checked', client.use_server_dns);
+            edit_enabled.attr('checked', client.enabled);
+            edit_client_public_key.val(client.public_key)
+            edit_client_preshared_key.val(client.preshared_key)
+            edit_additional_notes.val(client.additional_notes)
+            tagsInputValueList['edit_client_allocated_ips'] = client.allocated_ips
+            tagsInputValueList['edit_client_allowed_ips'] = client.allowed_ips
+            tagsInputValueList['edit_client_extra_allowed_ips'] = client.extra_allowed_ips
+            showTags(document.querySelector("#edit_client_allocated_ips"))
+            showTags(document.querySelector("#edit_client_allowed_ips"))
+            showTags(document.querySelector("#edit_client_extra_allowed_ips"))
+
+ 
+                // Get name interface 
+                fetch("/wg-client/list-interface/", {
+                    method: "POST",
+                    header: {
+                        'Content-type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            // Success 
+                            list_interface = res.data
+                        
+                            $("#edit_name_interface").empty()
+                            for (let i = 0; i < list_interface.length; i++) {
+                                $("#edit_name_interface").append(`<option value="${list_interface[i].id}">${list_interface[i].name} - ${list_interface[i].addresses}</option>`)
+                            }
+                            if (client.interface_id != null) {
+                                $("#edit_name_interface").val(client.interface_id.toString())
+                            }
+                        })
+                    } 
+                })
+
+        })
+
+        $("#form_edit_client").submit(function(event) {
+            event.preventDefault()
+            id = btn_confirm_update_client.val()
+
+            fetch(`/peer/${id}/`, {
+                method: "POST", 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: edit_client_name.val(),
+                    email: edit_client_email.val(),
+                    interface_id: edit_name_interface.val(),
+                    allocated_ips: tagsInputValueList["edit_client_allocated_ips"],
+                    allowed_ips: tagsInputValueList["edit_client_allowed_ips"],
+                    extra_allowed_ips: tagsInputValueList["edit_client_extra_allowed_ips"],
+                    endpoint: edit_client_endpoint.val(),
+                    use_server_dns: edit_use_server_dns.is(':checked'),
+                    enabled: edit_enabled.is(':checked'),
+                    public_key: edit_client_public_key.val(),
+                    preshared_key: edit_client_preshared_key.val(),
+                    additional_notes: edit_additional_notes.val()
+                }) 
+            })
+            .then(response => {
+                if (response.ok) { // Mã trạng thái 200
+                    response.json().then(res => {
+                        // Success 
+                        createToast('info', "Update client is successfully!")
+
+                        setTimeout(function() {
+                            window.location.href = "/wg-client/peer/";
+                        }, 3000);
+
+                    }) 
+                } else if (response.status === 400) {  // Mã trạng thái 400
+                    return response.json().then(err => {   //
+                        // Failed 
+                        console.log(err)
+                        delete err.status;
+                        createToast('danger', convertObjToStr(err))
+                    });
+                } else {
+                    throw new Error('Unexpected error: ' + response.status);
+                }
+            })
+            .catch(error => createToast('danger', error))
+        })
+        // End update client
+        
+
+        // Start create QR Code
+        let qrcode_element = $("#qrcode")
+        $(".btn-display-qrcode").click(function() {
+            id = $(this).attr('data-clientid')
+            fetch(`/clientconfig/${id}/`, {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            data = res['client_config']
+                            // create qrcode
+                         
+                            qrcode_element.empty();                          
+                            new QRCode("qrcode", {
+                                text: data,
+                                width: 450,
+                                height: 450,
+                                colorDark : "#000000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.H
+                            });  
+                        })
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+        })
+        // End create QR Code
+
+        
+        // Start send email -- tobecontinue....
+        btn_confirm_send_email = $("#btn_confirm_send_email")
+        recipient_email_input = $("#recipient_email")
+        loadingModel = $("#modal_loading")
+        $(".btn-send-email").click(function() {
+            id = $(this).attr('data-clientid')
+            btn_confirm_send_email.val(id)
+        })
+        $("#modal_send_email").submit(function(event) {
+            event.preventDefault()
+            recipient_email = recipient_email_input.val()
+            clientid = btn_confirm_send_email.val()
+
+            loadingModel.modal('show');
+
+            fetch("/send-email/", {
+                method: "POST", 
+                headers: {
+                    'Content-Type': 'application/json' // Định dạng dữ liệu là JSON
+                },
+                body: JSON.stringify({  // Chuyển đổi dữ liệu thành chuỗi JSON
+                    clientid: Number(clientid),
+                    email: recipient_email
+                }) 
+            })
+            .then(response => {
+                loadingModel.modal('hide');
+                if (response.ok) { // Mã trạng thái 200
+                    response.json().then(res => {
+                        // Success 
+                        createToast('info', res['message'])
+    
+                    }) 
+                } else if (response.status === 400) {  // Mã trạng thái 400
+                    return response.json().then(err => { 
+                        // Failed 
+                        createToast('danger', err['message'])
+    
+                    });
+                } else {
+                    throw new Error('Unexpected error: ' + response.status);
+                }
+            })
+            .catch(error => {
+                createToast('danger', error)
+            })
+        })
+        // End send email
+
+        // Start Search
+                // search form
+                $("#left_nav_bar_top").after(`<form class="ms-1 d-none d-sm-none d-md-inline" id="search-form" style="display: inline-block;">
+                    <div class="input-group input-group-sm">
+                        <input class="form-control " placeholder="Search" aria-label="Search" id="search-input">
+                        <button class="border-none input-group-text" type="submit" disabled="">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="search-select" style="max-width: 110px;">
+                        <select name="status-selector" id="status-selector"
+                            class="form-select fs-6 py-1 ms-2">
+                            <option value="All">All</option>
+                            <option value="Enabled">Enabled</option>
+                            <option value="Disabled">Disabled</option>
+                        </select>
+                </div>`)
+        // $("#status-selector").val()
+        $("#status-selector").change(function() {
+            value = $(this).val()
+            $("#content-clients > div").filter(function() {
+                if (value == "All") {
+                    $(this).toggle(true)
+                } else {
+                    $(this).toggle($(this).find('div.overlay').text().indexOf(value) > -1)
+                }
+            })
+        })
+
+        $("#search-input").on('keyup', function() {
+            value = $(this).val().toLowerCase()
+            $("#content-clients > div").filter(function() {
+                $(this).toggle($(this).find("div.card-body").text().toLowerCase().indexOf(value) > -1)
+            })
+
+            /*
+            $("#content-clients > div").filter(function() {
+                return $(this).css('display') !== 'none';
+            }) 
+            */
+        })
+        // End Search
+
+                // Start import data
+                $('#form_import_data').submit(function (e) {
+                    const MAX_SIZE_FILE = 3 * 1024 * 1024;  // 3MB
+                    e.preventDefault()
+                    var formData = new FormData();
+                    var fileField = document.getElementById('file_import');
+        
+                    var file = fileField.files[0];
+        
+                    if (!file) {
+                        createToast('danger', "You must upload file!")
+                        return false;
+                    }
+        
+                    if (file.type != 'application/json') {
+                        createToast('danger', `Type of file must be .json!`)
+                        return false;
+                    }
+        
+                    if (file.size > MAX_SIZE_FILE) {
+                        createToast('danger', `File ${file.name} is too big. Limit size is 3MB.`)
+                        return false;
+                    }
+        
+                    formData.append('file', file);
+        
+                    fetch('/import/vpnconnection/', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                response.json().then(res => {
+                                    // Success 
+                                    createToast('info', res['message'])
+                                    setTimeout(() => window.location.reload(), 2000)
+                                })
+                            } else if (response.status === 400) {  // Mã trạng thái 400
+                                return response.json().then(err => {   //
+                                    // Failed 
+                                    createToast('danger', err['message'])
+                                });
+                            } else {
+                                throw new Error('Unexpected error: ' + response.status);
+                            }
+                        })
+                        .catch(error => createToast('danger', error))
+                })
+                // End import data
+
+    });
+  
+</script>
+
+{% endblock %}

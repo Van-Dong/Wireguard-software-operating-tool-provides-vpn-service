@@ -1,0 +1,104 @@
+<div class="sidebar bg-dark col-auto col-md-auto col-lg-auto min-vh-100 d-flex flex-column justify-content-between">
+    <!-- Main content of sidebar-->
+    <div class="bg-dark p-2">
+      <!-- Brand of sidebar -->
+      <p class="d-flex text-decoration-none align-items-center text-white mt-2 mb-4">
+        <span class="ps-1 fs-4 d-none d-sm-inline ">WIREGUARD</span>
+      </p>
+  
+      <!-- Adminstrator -->
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/profile/" class="nav-link text-white">
+            <i class="fs-5 bi bi-person-circle"></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">{{user}}</span>
+          </a>
+        </li>
+      </ul>
+      <div class="border-bottom opacity-25"></div>
+  
+      <!-- Main -->
+      <p class="d-flex text-decoration-none align-items-center text-white mt-4 mb-1">
+        <span class="ps-1 fs-4 d-none d-sm-inline">User Management</span>
+      </p>
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/wg-client/peer/" class="nav-link text-white">
+            <i class="fs-5 bi bi-people "></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">VPN Connection</span>
+          </a>
+        </li>
+        {% if request.user.is_staff %}
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/users/" class="nav-link text-white">
+            <i class="fs-5 bi bi-gear-fill"></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">Account User</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+  
+      {% if request.user.is_staff %}
+      <!-- Settings -->
+      <p class="d-flex text-decoration-none align-items-center text-white mt-4 mb-1">
+        <span class="ps-1 fs-4 d-none d-sm-inline">System Settings</span>
+      </p>
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item py-2 py-sm-0">
+            <a href="/wg-server/interfaces" class="nav-link text-white">
+              <i class="fs-5 bi bi-pc-horizontal"></i>
+              <span class="fs-5 ms-2 d-none d-sm-inline">VPN Server Settings</span>
+            </a>
+          </li>
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/global-settings/" class="nav-link text-white">
+            <i class="fs-5 bi bi-gear-fill"></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">System Settings</span>
+          </a>
+        </li>
+      </ul>
+  
+      <!-- Monitor -->
+      <p class="d-flex text-decoration-none align-items-center text-white mt-4 mb-1">
+        <span class="ps-1 fs-4 d-none d-sm-inline">Monitor</span>
+      </p>
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/monitor/" class="nav-link text-white">
+            <i class="fs-5 bi bi-bar-chart-line-fill"></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">Monitor Realtime</span>
+          </a>
+        </li>
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/dashboard/" class="nav-link text-white">
+            <i class="fs-5 bi bi-bar-chart-line-fill"></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">Dashboard</span>
+          </a>
+        </li>
+      </ul>
+  
+      <!-- Utilites -->
+      <p class="d-flex text-decoration-none align-items-center text-white mt-4 mb-1">
+        <span class="ps-1 fs-4 d-none d-sm-inline">Utilities</span>
+      </p>
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item py-2 py-sm-0">
+          <a href="/backup/" class="nav-link text-white">
+            <i class="fs-5 bi bi-layer-backward"></i>
+            <span class="fs-5 ms-2 d-none d-sm-inline">Backup</span>
+          </a>
+        </li>
+      </ul>
+      {% endif %}
+  
+    </div>
+  
+    <!-- Logout -->
+    <div class="p-2">
+      <a class="btn btn-dark py-2 nav-link text-white" href="/logout/" role="button">
+        <i class="fs-4 bi bi-box-arrow-right"></i>
+        <span class="fs-4 ms-1 d-none d-sm-inline">Logout</span>
+      </a>
+    </div>
+  
+  </div>

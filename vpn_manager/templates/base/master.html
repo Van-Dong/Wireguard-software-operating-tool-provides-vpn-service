@@ -1,0 +1,453 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="shortcut icon" href="{% static 'favicon.png' %}" type="image/x-icon">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Bootstrap Icon -->
+    <link rel="stylesheet" href="{% static 'bootstrap/bootstrap-icons/font/bootstrap-icons.min.css' %}">
+
+    <!-- Jquery -->
+    <script src="{% static 'jquery/jquery.min.js' %}"></script>
+
+    <!-- Tags Input -->
+    <link rel="stylesheet" href="{% static 'tags-input-plugin/tagsinput.css' %}">
+
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .sidebar a:hover {
+            background-color: blue;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            font-weight: 700;
+        }
+
+        .card-box-text {
+            display: block;
+        }
+
+        .client-box, .interface-box {
+            position: relative;
+        }
+        .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.6);
+            /* Màu nền bán trong suốt */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 15;
+        }
+        .paused-client {
+            font-size: 5rem;
+        }
+        .paused-client:hover {
+            font-size: 7rem;
+            cursor: pointer;
+        }
+        .paused-interface {
+            font-size: 5rem;
+        }
+        .paused-interface:hover {
+            font-size: 7rem;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="wrapper container-fluid">
+        <div class="row flex-nowrap">
+            <!-- Sidebar -->
+            {% include 'base/sidebar.html' with user=request.user.username %}
+
+            <!-- Content -->
+            <div class="col px-0">
+
+                <!-- Nav bar top -->
+                {% include 'base/nav_bar_top.html' %}
+
+                {% block content %}
+                {% endblock %}
+
+            </div>
+
+        </div>
+    </div>
+
+    {% include 'base/base_modal.html'%}
+    
+    {% block modal %}
+    {% endblock %}
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="info_toast" class="toast align-items-center text-bg-primary border-0 text-wrap fw-bolder" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+              <div class="toast-body">
+                Hello, world! This is a toast message.
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+
+        <div id="warning_toast" class="toast align-items-center text-bg-warning border-0 text-wrap fw-bolder" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+              <div class="toast-body">
+                Hello, world! This is a toast message.
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+
+        <div id="danger_toast" class="toast align-items-center text-bg-danger border-0 text-wrap fw-bolder" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+              <div class="toast-body">
+                Hello, world! This is a toast message.
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+          
+    </div>
+
+
+    <!-- Tags Input Script -->
+    <script src="{% static 'tags-input-plugin/tagsinput.js' %}"></script>
+
+    <!-- Master Script for nav top,... -->
+    <script>
+        // Tooltip
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Create Toast message
+        function createToast(type, message) {
+            if (type == "info") {
+
+                $("#info_toast div.toast-body").html(message)
+                
+                $("#info_toast").addClass("show")
+                
+                setTimeout(function() {
+                    $("#info_toast").removeClass("show")
+                }, 5000);
+
+            } else if (type == "warning") {
+                $("#warning_toast div.toast-body").html(message)
+
+                $("#warning_toast").addClass("show")
+                
+                setTimeout(function() {
+                    $("#warning_toast").removeClass("show")
+                }, 5000);
+
+            } else if (type == "danger") {
+                $("#danger_toast div.toast-body").html(message)
+
+                $("#danger_toast").addClass("show")
+                
+                setTimeout(function() {
+                    $("#danger_toast").removeClass("show")
+                }, 5000);
+            }
+        }
+
+        // Convert object to String
+        function convertObjToStr(object) {
+            result = ""
+            for (key in object) {
+                result += `<strong>${key}</strong>: ${JSON.stringify(object[key])} <br/>`
+            }
+            return result
+        }
+
+        // nav bar top action
+        $(document).ready(function() {
+            // Apply config & restart server
+            $("#apply_config_confirm").click(function() {
+                fetch("/apply-config/", {
+                    method: "POST", 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                        }) 
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+            })
+
+            // Stop server
+            $("#stop_wireguard_confirm").click(function() {
+                fetch("/apply-config/", {
+                    method: "DELETE", 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                        }) 
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+            })
+
+            // Backup current config
+            $("#backup_config_confirm").click(function() {
+                fetch("/backup/", {
+                    method: "POST", 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', res['message'])
+                        }) 
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            createToast('danger', err['message'])
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+            })
+
+            // Add new client
+            $("#form_new_client").submit(function(event) {
+                event.preventDefault()
+
+                fetch("/wg-client/peer/", {
+                    method: "POST", 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: $("#client_name").val(),
+                        email: $("#client_email").val(),
+                        interface_id: Number($("#name_interface").val()),
+                        allocated_ips: tagsInputValueList["client_allocated_ips"],
+                        allowed_ips: tagsInputValueList["client_allowed_ips"],
+                        extra_allowed_ips: tagsInputValueList["client_extra_allowed_ips"],
+                        endpoint: $("#client_endpoint").val(),
+                        use_server_dns: $("#use_server_dns").is(':checked'),
+                        enabled: $("#enabled").is(':checked'),
+                        public_key: $("#client_public_key").val(),
+                        preshared_key: $("#client_preshared_key").val(),
+                        additional_notes: $("#additional_notes").val()
+                    }) 
+                })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', "Create new client is successfully!")
+
+                            setTimeout(function() {
+                                window.location.href = "/wg-client/peer/";
+                            }, 3000);
+
+                        }) 
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            console.log(err)
+                            delete err.status;
+                            createToast('danger', convertObjToStr(err))
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+            })
+
+            // Suggest parameter for new client
+            $("#btn-add-new-client").click(function() {
+                
+                // Get list interface  
+                fetch("/suggest-vpnconnection/", {
+                    method: "POST",
+                    headers: {
+                        'Content-type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            // Success 
+                            list_interface = res.data.interfaces
+                            // <option value="wg0">wg0</option>
+                            
+                            const selete_name_interface = $("#name_interface")
+                            selete_name_interface.empty() 
+                            selete_name_interface.append(`<option value="${list_interface[0].id}" selected>${list_interface[0].name} - ${list_interface[0].addresses}</option>`)
+                            for (let i = 1; i < list_interface.length; i++) {
+                                selete_name_interface.append(`<option value="${list_interface[i].id}">${list_interface[i].name} - ${list_interface[i].addresses}</option>`)
+                            }
+
+                            tagsInputValueList["client_allocated_ips"] = res.data.allocated_ip
+                            tagsInputValueList["client_allowed_ips"] = res.data.allowed_ip
+                            showTags(document.querySelector("#client_allocated_ips"))
+                            showTags(document.querySelector("#client_allowed_ips"))
+                        })
+                    } 
+                })
+            })
+            
+            // Suggest parameter when change select interface in new client
+            $("#name_interface").change(function() {
+                interface_id = $(this).val() 
+                fetch(`/suggest-vpnconnection/?interface_id=${interface_id}`, {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            tagsInputValueList["client_allocated_ips"] = res.data.allocated_ip
+                            tagsInputValueList["client_allowed_ips"] = res.data.allowed_ip
+                            showTags(document.querySelector("#client_allocated_ips"))
+                            showTags(document.querySelector("#client_allowed_ips"))
+                        })
+                    }
+                })
+                
+            })
+
+            // Add new interface
+            $("#form_new_interface").submit(function(event) {
+                event.preventDefault()
+
+                fetch("/wg-server/interfaces/", {
+                    method: "POST", 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: $("#wg_interface_name").val(),
+                        addresses: tagsInputValueList["interface_addresses"],
+                        listen_port: $("#listen_port").val(),
+                        pre_up: $("#pre_up").val(),
+                        post_up: $("#post_up").val(),
+                        pre_down: $("#pre_down").val(),
+                        post_down: $("#post_down").val(),
+                        enabled: $("#interface_enabled").is(':checked'),
+                        public_key: $("#interface_public_key").val(),
+                        private_key: $("#interface_private_key").val(),
+                    }) 
+                })
+                .then(response => {
+                    if (response.ok) { // Mã trạng thái 200
+                        response.json().then(res => {
+                            // Success 
+                            createToast('info', "Create new interface is successfully!")
+
+                            setTimeout(function() {
+                                window.location.href = "/wg-server/interfaces/";
+                            }, 3000);
+
+                        }) 
+                    } else if (response.status === 400) {  // Mã trạng thái 400
+                        return response.json().then(err => {   //
+                            // Failed 
+                            console.log(err)
+                            delete err.status;
+                            createToast('danger', convertObjToStr(err))
+                        });
+                    } else {
+                        throw new Error('Unexpected error: ' + response.status);
+                    }
+                })
+                .catch(error => createToast('danger', error))
+            })
+
+            // Suggest parameter for new interface
+            $("#btn-add-new-interface").click(function() {
+                fetch("/wg-server/suggest-interface/", {
+                    method: "POST",
+                    header: {
+                        'Content-type': 'application/json'
+                    },
+                })
+                  .then(response => {
+                    if (response.ok) {
+                        response.json().then(res => {
+                            // Success 
+                            suggest_interface = res.data
+                            $("#wg_interface_name").val(suggest_interface.name),
+                            $("#listen_port").val(suggest_interface.listen_port),
+                            $("#pre_up").val(suggest_interface.pre_up),
+                            $("#post_up").val(suggest_interface.post_up),
+                            $("#pre_down").val(suggest_interface.pre_down),
+                            $("#post_down").val(suggest_interface.post_down),
+                            // $("#interface_public_key").val(suggest_interface.public_key),
+                            // $("#interface_private_key").val(suggest_interface.private_key),
+                            tagsInputValueList["interface_addresses"] = suggest_interface.addresses
+                            showTags(document.querySelector("#interface_addresses"))
+                        })
+                    } 
+                  })
+            })
+        })
+
+    </script>
+
+    {% block script %}
+    {% endblock %}
+
+</body>
+
+</html>

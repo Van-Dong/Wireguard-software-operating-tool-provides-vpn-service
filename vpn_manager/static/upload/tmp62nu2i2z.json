@@ -1,0 +1,131 @@
+[
+{
+    "model": "vpn_manager.usermodel",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$B2iKjmT6V0UGWpy3lSkodK$o3CUAV8KzEqgESm3CrnMGmPfuGNs+r6YFVCjJhw4gzc=",
+        "is_superuser": false,
+        "username": "dongnv",
+        "email": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2024-06-01T03:56:09.306Z"
+    }
+},
+{
+    "model": "vpn_manager.usermodel",
+    "pk": 3,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$5fvlKqbonFlOJlmnTWtNLF$20QGXfkCmEypP7rvXGTPso9zXCduOuzK5npImO3w4PI=",
+        "is_superuser": false,
+        "username": "user2",
+        "email": "user2@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-06-01T03:59:21.920Z"
+    }
+},
+{
+    "model": "vpn_manager.usermodel",
+    "pk": 4,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$p1OgJO3Dp6J3oAtYJL3DpF$vB+wZIN7LR4DKhx/6D73baMyE5s29VEwDv0+2A7pLZ0=",
+        "is_superuser": false,
+        "username": "admin",
+        "email": "admin@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2024-06-01T03:59:32.470Z"
+    }
+},
+{
+    "model": "vpn_manager.usermodel",
+    "pk": 5,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$K3a8dfzgc2lYu82AOnDWdJ$BWsfIBUeFWrjuZTf2KC3AjTPIdQY9Qvk2XC9IrDyPis=",
+        "is_superuser": false,
+        "username": "user1",
+        "email": "user1@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-06-01T03:59:06.807Z"
+    }
+},
+{
+    "model": "vpn_manager.usermodel",
+    "pk": 6,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$K3a8dfzgc2lYu82AOnDWdJ$BWsfIBUeFWrjuZTf2KC3AjTPIdQY9Qvk2XC9IrDyPis=",
+        "is_superuser": false,
+        "username": "user2",
+        "email": "user22@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-06-01T03:59:06.807Z"
+    }
+},
+{
+    "model": "vpn_manager.usermodel",
+    "pk": 7,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$aiKnFVqF9boIsAmjnkt0KX$cIU9nMUMMRLCIP+1OmygqV6eS+QW0ECrO9Yze4Wtx90=",
+        "is_superuser": false,
+        "username": "user7",
+        "email": "user7@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2024-06-05T04:30:25.263Z"
+    }
+},
+{
+    "model": "vpn_manager.peer",
+    "pk": 1,
+    "fields": {
+        "name": "user1",
+        "email": "",
+        "allocated_ips": "10.252.1.2/32",
+        "private_key": "aBlL7k4U8lcjxj9e6f6lyk0Xd250FyBiP6hx3Z0wOXM=",
+        "public_key": "V8UdZsCykPBipR65GhtofWcGCJt7sqK3eSe4OwZ0ZX4=",
+        "preshared_key": "ee9Eh7qP495nxd7Y/O+ob4CViYkuRq0kF4hZX+3atz8=",
+        "allowed_ips": "0.0.0.0/0",
+        "endpoint": "",
+        "extra_allowed_ips": "",
+        "use_server_dns": false,
+        "enabled": true,
+        "additional_notes": "",
+        "created_at": "2024-06-05T04:04:04.364Z",
+        "updated_at": "2024-06-05T04:04:04.364Z"
+    }
+},
+{
+    "model": "vpn_manager.interface",
+    "pk": 3,
+    "fields": {
+        "addresses": "10.252.1.1/24",
+        "listen_port": 51820,
+        "pre_up": "",
+        "post_up": "",
+        "pre_down": "",
+        "post_down": "",
+        "private_key": "AP2vtJpb8owZEXI/gWHki/i6WDCleLYXgHB+KGLsr14=",
+        "public_key": "VzWqGLc+JSUJ/yabO+FEPNeQ9EcngS2ticRp5yxTzHc=",
+        "created_at": "2024-06-05T04:11:25.622Z",
+        "updated_at": "2024-06-05T04:11:25.622Z"
+    }
+},
+{
+    "model": "vpn_manager.globalsetting",
+    "pk": 1,
+    "fields": {
+        "endpoint_address": "192.168.0.3",
+        "dns_servers": "1.1.1.1",
+        "mtu": 1450,
+        "persistent_keepalive": 15,
+        "table": "auto",
+        "name_interface": "wg0",
+        "firewall_mark": "0xca6c",
+        "created_at": "2024-06-05T04:04:18.246Z",
+        "updated_at": "2024-06-05T04:04:18.246Z"
+    }
+}
+]

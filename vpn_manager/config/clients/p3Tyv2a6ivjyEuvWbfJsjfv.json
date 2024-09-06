@@ -1,0 +1,21 @@
+{
+    "name": "user3",
+    "email": "user3@gmail.com",
+    "allocated_ips": [
+        "10.252.1.1/32"
+    ],
+    "public_key": "KA1ZF092s/5BuJsgm8lw74yxwLaMoZtbARtpOhPsW2I=",
+    "preshared_key": "vsAV5B7aTCc2uCTJJOj/BAluEBI8G4x8J/1DUY/0iR0=",
+    "allowed_ips": [
+        "0.0.0.0/0"
+    ],
+    "endpoint": "",
+    "extra_allowed_ips": [],
+    "use_server_dns": true,
+    "enabled": true,
+    "additional_notes": "",
+    "private_key": "cJ9vBYfK26GF/mp/msjACHGRnvdSevY0XOBNSNLAIVY=",
+    "created_at": "2024-05-23T20:45:20.630604",
+    "updated_at": "2024-05-23T20:45:20.630604",
+    "id": "p3Tyv2a6ivjyEuvWbfJsjfv"
+}

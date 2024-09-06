@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Login</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="{% static 'favicon.png' %}" type="image/x-icon">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+  <!-- Jquery -->
+  <script src="{% static 'jquery/jquery.min.js' %}"></script>
+
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      /* background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(75, 14, 154, 1) 35%, rgba(0, 212, 255, 1) 100%); */
+      background: linear-gradient(90deg, rgb(157, 255, 0) 0%, rgb(38, 255, 0) 35%, rgba(0, 212, 255, 1) 100%);
+      font-family: 'Times New Roman', Times, serif;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="container-fluid">
+    <form method="POST" action="/api/token/" class="mx-auto p-5 mt-5 rounded-4 bg-white shadow" style="max-width: 350px;">
+      <div class="mb-3">
+        <p id="error" style="display: none;" class="text-danger text-center">Username or password incorrect!</p>
+        <h4 class="text-center">Login</h4>
+        <label for="username" class="form-label">User Name</label>
+        <input type="text" class="form-control" id="username" name="username">
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password">
+      </div>
+
+      <button id="submit" type="submit" class="btn btn-primary form-control">Login</button>
+    </form>
+  </div>
+
+  <!-- JS Login Logic -->
+  <script>
+    $(document).ready(function(){
+      $("form").submit(function(event){
+        event.preventDefault();
+        username = $("#username").val();
+        password = $("#password").val();
+        $.post("/api/token/",
+        {
+          username: username,
+          password: password
+        },
+        function(data, status){
+          // Xử lý nếu yêu cầu thành công
+          window.location.href = "/dashboard/";
+        }, 'json')
+        .fail(function(jqXHR, textStatus, errorThrown) {
+          // Xử lý lỗi nếu yêu cầu thất bại
+          $("#error").show();
+      });
+      })
+    });
+  </script>
+</body>
+
+</html>

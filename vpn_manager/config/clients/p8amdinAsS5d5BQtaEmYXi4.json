@@ -1,0 +1,21 @@
+{
+    "name": "user4",
+    "email": "user4@gmail.com",
+    "allocated_ips": [
+        "10.252.1.1/32"
+    ],
+    "public_key": "X0LEk0VYH/883ccxuty8+DaI2cHlxiHO959cZP2BeHo=",
+    "preshared_key": "",
+    "allowed_ips": [
+        "0.0.0.0/0"
+    ],
+    "endpoint": "",
+    "extra_allowed_ips": [],
+    "use_server_dns": true,
+    "enabled": true,
+    "additional_notes": "User 4 in Hanoi",
+    "private_key": "aFehvSky956xbGfczPcR8eXcVTAxzZ59o5mZ0Ru3c0Q=",
+    "created_at": "2024-05-23T20:45:50.163833",
+    "updated_at": "2024-05-23T20:45:50.163833",
+    "id": "p8amdinAsS5d5BQtaEmYXi4"
+}
